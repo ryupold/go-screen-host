@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"os/exec"
 	"runtime"
 )
 
 func main() {
-
+	ctx := context.Background()
+	if err := redirectJPEGs(ctx, 4545, 56565); err != nil {
+		panic(err)
+	}
 }
 
 func open(url string) error {

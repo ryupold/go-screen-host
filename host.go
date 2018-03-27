@@ -8,10 +8,12 @@ import (
 )
 
 func startServer() {
-	serverLife := grest.StartListening(context.Background(), "0.0.0.0", 8080, grest.Choose(
-		grest.Path("/click").OK(nil),
-		grest.ContentType("text/html").OK([]byte(streamPageHTML)),
-	))
+	fmt.Println("starting server...")
+	serverLife := grest.StartListening(context.Background(), "0.0.0.0", 8080,
+		grest.Choose(
+			grest.Path("/click").OK(nil),
+			grest.ContentType("text/html").OK([]byte(streamPageHTML)),
+		))
 
 	select {
 	case err, alive := <-serverLife:

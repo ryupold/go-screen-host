@@ -6,11 +6,22 @@ import (
 	"runtime"
 )
 
+const (
+	appName = "GoScreen"
+)
+
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go startWebServer(ctx, 8080)
+
+	open("http://localhost:8080")
+
 	if err := redirectJPEGs(ctx, 4545, 56565); err != nil {
 		panic(err)
 	}
+
 }
 
 func open(url string) error {

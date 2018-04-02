@@ -4,8 +4,24 @@ const streamPageHTML = `<html>
 <!DOCTYPE html>
 <html>
 	<head>
+	<meta charset="utf-8"/>
+	<title>{{appName}}</title>
 	<script>
-	// namespace MJPEG { ...
+		var mouse = {
+			x: 0,
+			y: 0,
+			leftButton: "none" //none, pressed, released, clicked
+		}
+
+
+		function sendMouseState() {
+			var xmlHttp = new XMLHttpRequest();
+			xmlHttp.open( "GET", "http://localhost:8080/click/"+mouse.x+"/"+mouse.y+"/"+mouse.leftButton, true ); 
+			xmlHttp.send( null );
+			return xmlHttp.responseText;
+		}
+
+	
 		var MJPEG = (function(module) {
 			"use strict";
 		
@@ -74,10 +90,10 @@ const streamPageHTML = `<html>
 				self.stream = new module.Stream(options);
 		
 				canvas.addEventListener("click", function(e) {
-					var xmlHttp = new XMLHttpRequest();
-					xmlHttp.open( "GET", "http://localhost:8080/click/"+e.pageX+"/"+e.pageY, false ); 
-					xmlHttp.send( null );
-					return xmlHttp.responseText;
+					mouse.x = e.pageX
+					mouse.y = e.pageY
+
+					sendMouseState();
 				}, false);
 		
 				function scaleRect(srcSize, dstSize) {
@@ -120,9 +136,9 @@ const streamPageHTML = `<html>
 						// console.log(".");
 					} catch (e) {
 						// if we can't draw, don't bother updating anymore
-						self.stop();
-						console.log("!");
-						throw e;
+						// self.stop();
+						console.log(e);
+						// throw e;
 					}
 				}
 		
@@ -134,8 +150,6 @@ const streamPageHTML = `<html>
 		
 		})(MJPEG || {});
 	</script>
-	<meta charset="utf-8"/>
-	<title>Player</title>
   </head>
   <body style="margin:0px;width:  100%; height: 100%;">
 	<canvas id="player" style="background: #000; width: 100%; height:100%;">

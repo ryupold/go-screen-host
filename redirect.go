@@ -24,7 +24,6 @@ func redirectJPEGs(ctx context.Context, mjpegPort, clientPort uint16) error {
 	stream.FrameInterval = 30 * time.Millisecond
 
 	log("stream created")
-	log(stream)
 
 	go http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", mjpegPort), stream)
 	log(fmt.Sprintf("started listening to: 0.0.0.0:%d", mjpegPort))
@@ -37,9 +36,7 @@ func redirectJPEGs(ctx context.Context, mjpegPort, clientPort uint16) error {
 		log("jpeg channel opened")
 
 		for jpg := range jpegChan {
-			log("jpeg received")
 			stream.UpdateJPEG(jpg)
-			log("stream updated")
 		}
 
 	}
@@ -61,6 +58,7 @@ func listenToJPEG(ctx context.Context, port uint16) (<-chan jpeg, error) {
 
 	go func() {
 		<-ctx.Done()
+		log("client disconnected")
 		logErr(lb.Close())
 		close(jpegChan)
 	}()
@@ -77,8 +75,8 @@ func listenToJPEG(ctx context.Context, port uint16) (<-chan jpeg, error) {
 		img := &bytes.Buffer{}
 		nextImageSize := uint32(0)
 
-		for readBytes, err := con.Read(chunk); logErr(err) != nil; readBytes, err = con.Read(chunk) {
-			log("read chunk: ", chunk[:readBytes])
+		for readBytes, err := con.Read(chunk); logErr(err) == nil; readBytes, err = con.Read(chunk) {
+			// log("read chunk: ", chunk[:readBytes])
 
 			buffer.Write(chunk[:readBytes])
 
@@ -96,7 +94,6 @@ func listenToJPEG(ctx context.Context, port uint16) (<-chan jpeg, error) {
 			}
 
 			if uint32(img.Len()) == nextImageSize {
-				log("image complete ", img.Len())
 				jpegChan <- img.Bytes()
 				nextImageSize = 0
 				img.Reset()
@@ -117,6 +114,10 @@ func min(a, b int) int {
 func logErr(err error) error {
 	if err != nil && err != io.EOF && err != context.Canceled {
 		fmt.Printf("Error: %+v", err)
+	} else if err == io.EOF {
+		fmt.Printf("EOF")
+	} else if err == context.Canceled {
+		fmt.Printf("Canceled")
 	}
 	return err
 }

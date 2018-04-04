@@ -28,47 +28,63 @@ func redirectJPEGs(ctx context.Context, mjpegPort, clientPort uint16) error {
 	go http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", mjpegPort), stream)
 	log(fmt.Sprintf("started listening to: 0.0.0.0:%d", mjpegPort))
 
-	for ctx.Err() == nil {
-		jpegChan, err := listenToJPEG(ctx, clientPort)
+	go func() {
+		lb, err := net.Listen("tcp", fmt.Sprintf(":%d", clientPort))
 		if err != nil {
-			return err
-		}
-		log("jpeg channel opened")
-
-		for jpg := range jpegChan {
-			stream.UpdateJPEG(jpg)
+			cancel()
+			logErr(err)
 		}
 
-	}
+		defer lb.Close()
+
+		log("started listening to port: ", clientPort)
+
+		clientCancel := func() {}
+		for {
+			con, err := lb.Accept()
+			if logErr(err) != nil {
+				continue
+			}
+			clientCancel()
+			clientCtx, cc := context.WithCancel(ctx)
+			clientCancel = cc
+
+			go func() {
+				defer cc()
+				for clientCtx.Err() == nil {
+					jpegChan, err := listenToJPEG(clientCtx, con)
+					if err != nil {
+						return
+					}
+					log("jpeg channel opened")
+
+					for jpg := range jpegChan {
+						stream.UpdateJPEG(jpg)
+					}
+
+				}
+			}()
+		}
+	}()
+
+	<-ctx.Done()
 	return nil
 }
 
-func listenToJPEG(ctx context.Context, port uint16) (<-chan jpeg, error) {
+func listenToJPEG(ctx context.Context, con net.Conn) (<-chan jpeg, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
-	lb, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		cancel()
-		return nil, err
-	}
-	log("started listening to port: ", port)
-
-	con, err := lb.Accept()
 	jpegChan := make(chan jpeg)
 
 	go func() {
 		<-ctx.Done()
 		log("client disconnected")
-		logErr(lb.Close())
+		logErr(con.Close())
 		close(jpegChan)
 	}()
 
 	go func() {
 		defer cancel()
-
-		if logErr(err) != nil {
-			return
-		}
 
 		chunk := make([]byte, 16*1024)
 		buffer := &bytes.Buffer{}

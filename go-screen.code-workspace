@@ -4,10 +4,10 @@
 			"path": "."
 		},
 		{
-			"path": "C:\\Users\\realr\\go\\src\\github.com\\ryupold\\go-screen-client"
+			"path": "../go-screen-client"
 		},
 		{
-			"path": "C:\\Users\\realr\\go\\src\\github.com\\ryupold\\grest"
+			"path": "../grest"
 		}
 	],
 	"settings": {}

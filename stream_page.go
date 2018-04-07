@@ -163,7 +163,7 @@ const streamPageHTML = `
 
     <script>
         let parts = window.location.href.toString().split("/");
-        document.title = parts[parts.length - 1];
+        document.title = parts[parts.length - 1]+'<br/><br/>download the <a href="https://github.com/ryupold/go-screen-client/releases">Client</a> to connect';
     </script>
 </body>
 

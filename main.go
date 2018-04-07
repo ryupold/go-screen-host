@@ -16,7 +16,9 @@ import (
 //go:generate go run internal/resources.go
 
 const (
-	appName       = "GoScreen"
+	appName = "GoScreen Host"
+	//Version of the application
+	Version       = "1.0.0"
 	wwwPort       = 8080
 	dataPort      = 4545
 	streamingPort = 56565
@@ -72,7 +74,7 @@ func onReady() {
 				open(fmt.Sprintf("http://localhost:8080/%s:%d", ip, streamingPort))
 			case <-aboutMenuItem.ClickedCh:
 				log("about clicked")
-				dialog.Message("%s", "Hello").Title(appName)
+				dialog.Message("%s %s", appName, Version).Title(appName).Info()
 			}
 		}
 	}()
